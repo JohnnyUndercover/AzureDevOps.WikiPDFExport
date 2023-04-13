@@ -116,8 +116,10 @@ namespace azuredevops_export_wiki
                         PreferCSSPageSize = false,
                         DisplayHeaderFooter = true,
                         MarginOptions = {
-                        Top = "80px",
-                        Bottom = "100px",
+                        //Top = "80px",
+                        Top = GetMarginFromTemplateHeightOrDefault(headerTemplate,"80px"),
+                        //Bottom = "100px",
+                        Bottom = GetMarginFromTemplateHeightOrDefault(footerTemplate,"100px"),
                         //left and right do not have an impact
                         Left = "100px",
                         Right = "100px"
@@ -145,5 +147,38 @@ namespace azuredevops_export_wiki
             _logger.Log($"PDF created at: {output}");
             return output;
         }
+
+        private string GetMarginFromTemplateHeightOrDefault(string htmlTemplate, string defaultMargin)
+        {
+            var templateHeight = GetDivHeight(htmlTemplate);
+
+            if (templateHeight != 0)
+            {
+                // Dont know why, but the height of the header increases by 1.34 times and we get an additional margin of 20px on top of the pdf
+                // Problem is disscussed here: https://github.com/MaxMelcher/AzureDevOps.WikiPDFExport/issues/138
+                // If we do not roundup with ceiling the body somethimes overlaps with the header
+                return Math.Ceiling((templateHeight * 1.34) + 20).ToString() + "px";
+            }
+           
+            return defaultMargin;
+        }
+
+        public int GetDivHeight(string htmlTemplate)
+        {
+            
+            var pattern = @"<div\s+[^>]*\s*style\s*=\s*[""\'][^""\']*[\s]*height\s*:\s*(\d+)[px][^""\']*[""\'][^>]*>";
+
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase);
+
+            var match = regex.Match(htmlTemplate);
+
+            if (!string.IsNullOrWhiteSpace(htmlTemplate) && match.Success && int.TryParse(match.Groups[1].Value, out var height))
+            {
+                return height;
+            }
+
+            return 0;
+        }
+        
     }
 }
