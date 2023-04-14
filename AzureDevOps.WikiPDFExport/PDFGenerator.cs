@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
+using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace azuredevops_export_wiki
